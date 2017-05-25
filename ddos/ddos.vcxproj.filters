@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="pthread">
+      <UniqueIdentifier>{824b7e57-63eb-4879-8893-1558a1500834}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{a0f72986-ba07-4f83-beec-0305a7b0151d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pthread\include">
+      <UniqueIdentifier>{82ab6dc5-50e9-45c2-bea7-5d3768589782}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pthread\dll">
+      <UniqueIdentifier>{407c2765-9385-4e8f-bfc9-728a3dcc8d5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pthread\lib">
+      <UniqueIdentifier>{88092f95-0b4e-4cf5-8fa8-15c28071f4d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iop">
+      <UniqueIdentifier>{949b5e19-f84e-48b8-b4b3-ffd5b3f77de5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="iop\include">
+      <UniqueIdentifier>{6b816b48-4ffd-44d9-90ed-ca6be553ce4f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="iop_util.c">
+      <Filter>iop</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="chead.h">
+      <Filter>iop\include</Filter>
+    </ClInclude>
+    <ClInclude Include="iop_util.h">
+      <Filter>iop\include</Filter>
+    </ClInclude>
+    <ClInclude Include="pthread.h">
+      <Filter>pthread\include</Filter>
+    </ClInclude>
+    <ClInclude Include="sched.h">
+      <Filter>pthread\include</Filter>
+    </ClInclude>
+    <ClInclude Include="semaphore.h">
+      <Filter>pthread\include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pthreadGC2.dll">
+      <Filter>pthread\dll</Filter>
+    </None>
+    <None Include="pthreadVC2.dll">
+      <Filter>pthread\dll</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="pthreadVC2.lib">
+      <Filter>pthread\lib</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
