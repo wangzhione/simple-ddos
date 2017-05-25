@@ -32,12 +32,12 @@ endef
 #
 .PHONY:all clean cleanall
 
-all:main.exe
+all:ddos.exe
 
 #
 # *.o 映射到 $(TAR_PATH)/$(BUILD_DIR)/*.o
 #
-main.exe:main.o iop_util.o
+ddos.exe:main.o iop_util.o
 	$(RUN)
 
 #
