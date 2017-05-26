@@ -180,8 +180,13 @@ static void * _tcpsend(void * arg) {
 		while (socket_connect(s, &targ->addr) < Success_Base)
 			;
 
-		socket_sendn(s, targ->ts, BUFSIZ);
-		++targ->tcpsend;
+		// 疯狂发送数据包
+		for (;;) {
+			if (Success_Base > socket_send(s, targ->ts, BUFSIZ))
+				break;
+			++targ->tcpsend;
+		}
+
 		socket_close(s);
 	}
 
