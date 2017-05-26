@@ -176,12 +176,14 @@ static void * _tcpsend(void * arg) {
 			continue;
 		}
 
-		socket_connect(s, &targ->addr);
-		socket_sendn(s, targ->ts, BUFSIZ);
+		if (socket_connect(s, &targ->addr) < Success_Base) 
+			CERR("socket_connect s addr is error!"); 
+		else {
+			socket_sendn(s, targ->ts, BUFSIZ);
+			++targ->tcpsend;
+		}	
 
 		socket_close(s);
-
-		++targ->tcpsend;
 	}
 
 	return arg;
