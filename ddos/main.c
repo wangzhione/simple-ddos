@@ -153,14 +153,12 @@ static void * _connect(void * arg) {
 			continue;
 		}
 
-		// 粗略统计
-		if (socket_connect(s, &targ->addr) >= Success_Base) {
-			++targ->connect;
-		}
+		// 精确统计, 一定要连接成功
+		while (socket_connect(s, &targ->addr) < Success_Base)
+			;
 
+		++targ->connect;
 		socket_close(s);
-
-
 	}
 
 	return arg;
@@ -178,11 +176,12 @@ static void * _tcpsend(void * arg) {
 			continue;
 		}
 
-		if (socket_connect(s, &targ->addr) >= Success_Base) {
-			socket_sendn(s, targ->ts, BUFSIZ);
-			++targ->tcpsend;
-		}	
+		// 精确统计, 一定要连接成功
+		while (socket_connect(s, &targ->addr) < Success_Base)
+			;
 
+		socket_sendn(s, targ->ts, BUFSIZ);
+		++targ->tcpsend;
 		socket_close(s);
 	}
 
