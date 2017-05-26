@@ -153,12 +153,14 @@ static void * _connect(void * arg) {
 			continue;
 		}
 
-		socket_connect(s, &targ->addr);
+		// 粗略统计
+		if (socket_connect(s, &targ->addr) >= Success_Base) {
+			++targ->connect;
+		}
 
 		socket_close(s);
 
-		// 粗略统计
-		++targ->connect;
+
 	}
 
 	return arg;
@@ -176,9 +178,7 @@ static void * _tcpsend(void * arg) {
 			continue;
 		}
 
-		if (socket_connect(s, &targ->addr) < Success_Base) 
-			CERR("socket_connect s addr is error!"); 
-		else {
+		if (socket_connect(s, &targ->addr) >= Success_Base) {
 			socket_sendn(s, targ->ts, BUFSIZ);
 			++targ->tcpsend;
 		}	
