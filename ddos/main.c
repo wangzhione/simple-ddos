@@ -181,11 +181,8 @@ static void * _tcpsend(void * arg) {
 			;
 
 		// 疯狂发送数据包
-		for (;;) {
-			if (Success_Base > socket_send(s, targ->ts, BUFSIZ))
-				break;
+		while(socket_send(s, targ->ts, BUFSIZ) >= Success_Base)
 			++targ->tcpsend;
-		}
 
 		socket_close(s);
 	}
@@ -204,11 +201,11 @@ static void * _udpsend(void * arg) {
 			continue;
 		}
 
-		socket_sendto(s, targ->us, BUFSIZ, 0, &targ->addr, sizeof(targ->addr));
+		// 疯狂发送数据包
+		while(socket_sendto(s, targ->us, BUFSIZ, 0, &targ->addr, sizeof(targ->addr)) >= Success_Base)
+			++targ->udpsend;
 
 		socket_close(s);
-
-		++targ->udpsend;
 	}
 
 	return arg;
