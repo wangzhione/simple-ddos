@@ -1,113 +1,47 @@
-﻿/* This is an implementation of the threads API of POSIX 1003.1-2001.
+/* This is an implementation of the threads API of POSIX 1003.1-2001.
  *
  * --------------------------------------------------------------------------
  *
  *      Pthreads-win32 - POSIX Threads Library for Win32
  *      Copyright(C) 1998 John E. Bossom
- *      Copyright(C) 1999,2005 Pthreads-win32 contributors
- * 
- *      Contact Email: rpj@callisto.canberra.edu.au
- * 
+ *      Copyright(C) 1999,2012 Pthreads-win32 contributors
+ *
+ *      Homepage1: http://sourceware.org/pthreads-win32/
+ *      Homepage2: http://sourceforge.net/projects/pthreads4w/
+ *
  *      The current list of contributors is contained
  *      in the file CONTRIBUTORS included with the source
  *      code distribution. The list can also be seen at the
  *      following World Wide Web location:
  *      http://sources.redhat.com/pthreads-win32/contributors.html
- * 
+ *
  *      This library is free software; you can redistribute it and/or
  *      modify it under the terms of the GNU Lesser General Public
  *      License as published by the Free Software Foundation; either
  *      version 2 of the License, or (at your option) any later version.
- * 
+ *
  *      This library is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *      Lesser General Public License for more details.
- * 
+ *
  *      You should have received a copy of the GNU Lesser General Public
  *      License along with this library in the file COPYING.LIB;
  *      if not, write to the Free Software Foundation, Inc.,
  *      59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#if !defined( PTHREAD_H )
-#define PTHREAD_H
+#if !defined(_H_PTHREAD) && defined(_MSC_VER)
+#define _H_PTHREAD
 
 /*
  * See the README file for an explanation of the pthreads-win32 version
  * numbering scheme and how the DLL is named etc.
  */
-#define PTW32_VERSION 2,9,1,0
-#define PTW32_VERSION_STRING "2, 9, 1, 0\0"
+#define PTW32_VERSION 2, 10, 0, 1
+#define PTW32_VERSION_STRING "2, 10, 0, 1"
 
-/* There are three implementations of cancel cleanup.
- * Note that pthread.h is included in both application
- * compilation units and also internally for the library.
- * The code here and within the library aims to work
- * for all reasonable combinations of environments.
- *
- * The three implementations are:
- *
- *   WIN32 SEH
- *   C
- *   C++
- *
- * Please note that exiting a push/pop block via
- * "return", "exit", "break", or "continue" will
- * lead to different behaviour amongst applications
- * depending upon whether the library was built
- * using SEH, C++, or C. For example, a library built
- * with SEH will call the cleanup routine, while both
- * C++ and C built versions will not.
- */
-
-/*
- * Define defaults for cleanup code.
- * Note: Unless the build explicitly defines one of the following, then
- * we default to standard C style cleanup. This style uses setjmp/longjmp
- * in the cancelation and thread exit implementations and therefore won't
- * do stack unwinding if linked to applications that have it (e.g.
- * C++ apps). This is currently consistent with most/all commercial Unix
- * POSIX threads implementations.
- */
-#if !defined( __CLEANUP_SEH ) && !defined( __CLEANUP_CXX ) && !defined( __CLEANUP_C )
-# define __CLEANUP_C
-#endif
-
-#if defined( __CLEANUP_SEH ) && ( !defined( _MSC_VER ) && !defined(PTW32_RC_MSC))
-#error ERROR [__FILE__, line __LINE__]: SEH is not supported for this compiler.
-#endif
-
-/*
- * Stop here if we are being included by the resource compiler.
- */
-#if !defined(RC_INVOKED)
-
-#undef PTW32_LEVEL
-
-#if defined(_POSIX_SOURCE)
-#define PTW32_LEVEL 0
-/* Early POSIX */
-#endif
-
-#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309
-#undef PTW32_LEVEL
-#define PTW32_LEVEL 1
-/* Include 1b, 1c and 1d */
-#endif
-
-#if defined(INCLUDE_NP)
-#undef PTW32_LEVEL
-#define PTW32_LEVEL 2
-/* Include Non-Portable extensions */
-#endif
-
-#define PTW32_LEVEL_MAX 3
-
-#if ( defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112 )  || !defined(PTW32_LEVEL)
-#define PTW32_LEVEL PTW32_LEVEL_MAX
-/* Include everything */
-#endif
+#pragma comment(lib, "pthread_lib.lib")
 
 /*
  * -------------------------------------------------------------
@@ -182,44 +116,6 @@
  * -------------------------------------------------------------
  */
 
-/* Try to avoid including windows.h */
-#if (defined(__MINGW64__) || defined(__MINGW32__)) && defined(__cplusplus)
-#define PTW32_INCLUDE_WINDOWS_H
-#endif
-
-#if defined(PTW32_INCLUDE_WINDOWS_H)
-#include <windows.h>
-#endif
-
-#if defined(_MSC_VER) && _MSC_VER < 1300 || defined(__DMC__)
-/*
- * VC++6.0 or early compiler's header has no DWORD_PTR type.
- */
-typedef unsigned long DWORD_PTR;
-typedef unsigned long ULONG_PTR;
-#endif
-/*
- * -----------------
- * autoconf switches
- * -----------------
- */
-
-#if defined(HAVE_PTW32_CONFIG_H)
-#include "config.h"
-#endif /* HAVE_PTW32_CONFIG_H */
-
-#if !defined(NEED_FTIME)
-#include <time.h>
-#else /* NEED_FTIME */
-/* use native WIN32 time API */
-#endif /* NEED_FTIME */
-
-#if defined(HAVE_SIGNAL_H)
-#include <signal.h>
-#endif /* HAVE_SIGNAL_H */
-
-#include <limits.h>
-
 /*
  * Boolean values to make us independent of system includes.
  */
@@ -228,68 +124,9 @@ enum {
   PTW32_TRUE = (! PTW32_FALSE)
 };
 
-/*
- * This is a duplicate of what is in the autoconf config.h,
- * which is only used when building the pthread-win32 libraries.
- */
-
-#if !defined(PTW32_CONFIG_H)
-#  if defined(WINCE)
-#    define NEED_ERRNO
-#    define NEED_SEM
-#  endif
-#  if defined(__MINGW64__)
-#    define HAVE_STRUCT_TIMESPEC
-#    define HAVE_MODE_T
-#  elif defined(_UWIN) || defined(__MINGW32__)
-#    define HAVE_MODE_T
-#  endif
-#endif
-
-/*
- *
- */
-
-#if PTW32_LEVEL >= PTW32_LEVEL_MAX
-#if defined(NEED_ERRNO)
-#include "need_errno.h"
-#else
-#include <errno.h>
-#endif
-#endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
-
-/*
- * Several systems don't define some error numbers.
- */
-#if !defined(ENOTSUP)
-#  define ENOTSUP 48   /* This is the value in Solaris. */
-#endif
-
-#if !defined(ETIMEDOUT)
-#  define ETIMEDOUT 10060 /* Same as WSAETIMEDOUT */
-#endif
-
-#if !defined(ENOSYS)
-#  define ENOSYS 140     /* Semi-arbitrary value */
-#endif
-
-#if !defined(EDEADLK)
-#  if defined(EDEADLOCK)
-#    define EDEADLK EDEADLOCK
-#  else
-#    define EDEADLK 36     /* This is the value in MSVC. */
-#  endif
-#endif
-
-/* POSIX 2008 - related to robust mutexes */
-#if !defined(EOWNERDEAD)
-#  define EOWNERDEAD 43
-#endif
-#if !defined(ENOTRECOVERABLE)
-#  define ENOTRECOVERABLE 44
-#endif
-
+#include <time.h>
 #include "sched.h"
+#include <limits.h>
 
 /*
  * To avoid including windows.h we define only those things that we
@@ -318,11 +155,6 @@ enum {
 #define SIG_SETMASK 2
 #endif /* SIG_SETMASK */
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif                          /* __cplusplus */
-
 /*
  * -------------------------------------------------------------
  *
@@ -340,17 +172,17 @@ extern "C"
  * either indicates that sysconf(), which is not implemented, may be used at
  * runtime to check the status of the option.
  *
- * _POSIX_THREADS (== 200112L)
- *                      If == 200112L, you can use threads
+ * _POSIX_THREADS (== 20080912L)
+ *                      If == 20080912L, you can use threads
  *
- * _POSIX_THREAD_ATTR_STACKSIZE (== 200112L)
- *                      If == 200112L, you can control the size of a thread's
+ * _POSIX_THREAD_ATTR_STACKSIZE (== 200809L)
+ *                      If == 200809L, you can control the size of a thread's
  *                      stack
  *                              pthread_attr_getstacksize
  *                              pthread_attr_setstacksize
  *
  * _POSIX_THREAD_ATTR_STACKADDR (== -1)
- *                      If == 200112L, you can allocate and control a thread's
+ *                      If == 200809L, you can allocate and control a thread's
  *                      stack. If not supported, the following functions
  *                      will return ENOSYS, indicating they are not
  *                      supported:
@@ -365,13 +197,13 @@ extern "C"
  *                      writers over readers when threads have equal priority.
  *
  * _POSIX_THREAD_PRIO_INHERIT (== -1)
- *                      If == 200112L, you can create priority inheritance
+ *                      If == 200809L, you can create priority inheritance
  *                      mutexes.
  *                              pthread_mutexattr_getprotocol +
  *                              pthread_mutexattr_setprotocol +
  *
  * _POSIX_THREAD_PRIO_PROTECT (== -1)
- *                      If == 200112L, you can create priority ceiling mutexes
+ *                      If == 200809L, you can create priority ceiling mutexes
  *                      Indicates the availability of:
  *                              pthread_mutex_getprioceiling
  *                              pthread_mutex_setprioceiling
@@ -390,22 +222,24 @@ extern "C"
  *                              pthread_condattr_getpshared
  *                              pthread_condattr_setpshared
  *
- * _POSIX_THREAD_SAFE_FUNCTIONS (== 200112L)
- *                      If == 200112L you can use the special *_r library
+ * _POSIX_THREAD_SAFE_FUNCTIONS (== 200809L)
+ *                      If == 200809L you can use the special *_r library
  *                      functions that provide thread-safe behaviour
  *
- * _POSIX_READER_WRITER_LOCKS (== 200112L)
- *                      If == 200112L, you can use read/write locks
+ * _POSIX_READER_WRITER_LOCKS (== 200809L)
+ *                      If == 200809L, you can use read/write locks
  *
- * _POSIX_SPIN_LOCKS (== 200112L)
- *                      If == 200112L, you can use spin locks
+ * _POSIX_SPIN_LOCKS (== 200809L)
+ *                      If == 200809L, you can use spin locks
  *
- * _POSIX_BARRIERS (== 200112L)
- *                      If == 200112L, you can use barriers
+ * _POSIX_BARRIERS (== 200809L)
+ *                      If == 200809L, you can use barriers
  *
- *      + These functions provide both 'inherit' and/or
- *        'protect' protocol, based upon these macro
- *        settings.
+ * _POSIX_ROBUST_MUTEXES (== 200809L)
+ *                      If == 200809L, you can use robust mutexes
+ *                      Officially this should also imply
+ *                      _POSIX_THREAD_PROCESS_SHARED != -1 however
+ *                      not here yet.
  *
  * -------------------------------------------------------------
  */
@@ -430,6 +264,9 @@ extern "C"
 
 #undef _POSIX_THREAD_ATTR_STACKSIZE
 #define _POSIX_THREAD_ATTR_STACKSIZE 200809L
+
+#undef _POSIX_ROBUST_MUTEXES
+#define _POSIX_ROBUST_MUTEXES 200809L
 
 /*
  * The following options are not supported
@@ -518,42 +355,6 @@ extern "C"
 #undef SEM_VALUE_MAX
 #define SEM_VALUE_MAX                           INT_MAX
 
-
-#if defined(__GNUC__) && !defined(__declspec)
-# error Please upgrade your GNU compiler to one that supports __declspec.
-#endif
-
-/*
- * When building the library, you should define PTW32_BUILD so that
- * the variables/functions are exported correctly. When using the library,
- * do NOT define PTW32_BUILD, and then the variables/functions will
- * be imported correctly.
- */
-#if !defined(PTW32_STATIC_LIB)
-#  if defined(PTW32_BUILD)
-#    define PTW32_DLLPORT __declspec (dllexport)
-#  else
-#    define PTW32_DLLPORT __declspec (dllimport)
-#  endif
-#else
-#  define PTW32_DLLPORT
-#endif
-
-/*
- * The Open Watcom C/C++ compiler uses a non-standard calling convention
- * that passes function args in registers unless __cdecl is explicitly specified
- * in exposed function prototypes.
- *
- * We force all calls to cdecl even though this could slow Watcom code down
- * slightly. If you know that the Watcom compiler will be used to build both
- * the DLL and application, then you can probably define this as a null string.
- * Remember that pthread.h (this file) is used for both the DLL and application builds.
- */
-#define PTW32_CDECL __cdecl
-
-#if defined(_UWIN) && PTW32_LEVEL >= PTW32_LEVEL_MAX
-#   include     <sys/types.h>
-#else
 /*
  * Generic handle type - intended to extend uniqueness beyond
  * that available with a simple pointer. It should scale for either
@@ -572,7 +373,7 @@ typedef struct pthread_mutex_t_ * pthread_mutex_t;
 typedef struct pthread_mutexattr_t_ * pthread_mutexattr_t;
 typedef struct pthread_cond_t_ * pthread_cond_t;
 typedef struct pthread_condattr_t_ * pthread_condattr_t;
-#endif
+
 typedef struct pthread_rwlock_t_ * pthread_rwlock_t;
 typedef struct pthread_rwlockattr_t_ * pthread_rwlockattr_t;
 typedef struct pthread_spinlock_t_ * pthread_spinlock_t;
@@ -640,7 +441,7 @@ enum {
 /*
  * ====================
  * ====================
- * Cancelation
+ * Cancellation
  * ====================
  * ====================
  */
@@ -656,8 +457,7 @@ enum {
  */
 #define PTHREAD_ONCE_INIT       { PTW32_FALSE, 0, 0, 0}
 
-struct pthread_once_t_
-{
+struct pthread_once_t_ {
   int          done;        /* indicates if user function has been executed */
   void *       lock;
   int          reserved1;
@@ -692,172 +492,55 @@ struct pthread_once_t_
 /*
  * Mutex types.
  */
-enum
-{
+enum {
   /* Compatibility with LinuxThreads */
   PTHREAD_MUTEX_FAST_NP,
   PTHREAD_MUTEX_RECURSIVE_NP,
   PTHREAD_MUTEX_ERRORCHECK_NP,
-  PTHREAD_MUTEX_TIMED_NP = PTHREAD_MUTEX_FAST_NP,
-  PTHREAD_MUTEX_ADAPTIVE_NP = PTHREAD_MUTEX_FAST_NP,
+  PTHREAD_MUTEX_TIMED_NP        = PTHREAD_MUTEX_FAST_NP,
+  PTHREAD_MUTEX_ADAPTIVE_NP     = PTHREAD_MUTEX_FAST_NP,
   /* For compatibility with POSIX */
-  PTHREAD_MUTEX_NORMAL = PTHREAD_MUTEX_FAST_NP,
-  PTHREAD_MUTEX_RECURSIVE = PTHREAD_MUTEX_RECURSIVE_NP,
-  PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP,
-  PTHREAD_MUTEX_DEFAULT = PTHREAD_MUTEX_NORMAL
+  PTHREAD_MUTEX_NORMAL          = PTHREAD_MUTEX_FAST_NP,
+  PTHREAD_MUTEX_RECURSIVE       = PTHREAD_MUTEX_RECURSIVE_NP,
+  PTHREAD_MUTEX_ERRORCHECK      = PTHREAD_MUTEX_ERRORCHECK_NP,
+  PTHREAD_MUTEX_DEFAULT         = PTHREAD_MUTEX_NORMAL
 };
 
 
 typedef struct ptw32_cleanup_t ptw32_cleanup_t;
 
-#if defined(_MSC_VER)
 /* Disable MSVC 'anachronism used' warning */
-#pragma warning( disable : 4229 )
-#endif
+#pragma warning(disable : 4229)
 
-typedef void (* PTW32_CDECL ptw32_cleanup_callback_t)(void *);
+typedef void (* __cdecl ptw32_cleanup_callback_t)(void *);
 
-#if defined(_MSC_VER)
-#pragma warning( default : 4229 )
-#endif
+#pragma warning(default : 4229)
 
-struct ptw32_cleanup_t
-{
+struct ptw32_cleanup_t {
   ptw32_cleanup_callback_t routine;
-  void *arg;
-  struct ptw32_cleanup_t *prev;
+  void * arg;
+  struct ptw32_cleanup_t * prev;
 };
 
-#if defined(__CLEANUP_SEH)
-        /*
-         * WIN32 SEH version of cancel cleanup.
-         */
+/*
+ * WIN32 SEH version of cancel cleanup.
+ */
 
 #define pthread_cleanup_push( _rout, _arg ) \
         { \
             ptw32_cleanup_t     _cleanup; \
-            \
-        _cleanup.routine        = (ptw32_cleanup_callback_t)(_rout); \
+			_cleanup.routine    = (ptw32_cleanup_callback_t)(_rout); \
             _cleanup.arg        = (_arg); \
-            __try \
-              { \
+            __try { \
 
 #define pthread_cleanup_pop( _execute ) \
-              } \
-            __finally \
-                { \
-                    if( _execute || AbnormalTermination()) \
-                      { \
-                          (*(_cleanup.routine))( _cleanup.arg ); \
-                      } \
+            } \
+            __finally { \
+                if( _execute || AbnormalTermination()) { \
+                        (*(_cleanup.routine))( _cleanup.arg ); \
                 } \
+            } \
         }
-
-#else /* __CLEANUP_SEH */
-
-#if defined(__CLEANUP_C)
-
-        /*
-         * C implementation of PThreads cancel cleanup
-         */
-
-#define pthread_cleanup_push( _rout, _arg ) \
-        { \
-            ptw32_cleanup_t     _cleanup; \
-            \
-            ptw32_push_cleanup( &_cleanup, (ptw32_cleanup_callback_t) (_rout), (_arg) ); \
-
-#define pthread_cleanup_pop( _execute ) \
-            (void) ptw32_pop_cleanup( _execute ); \
-        }
-
-#else /* __CLEANUP_C */
-
-#if defined(__CLEANUP_CXX)
-
-        /*
-         * C++ version of cancel cleanup.
-         * - John E. Bossom.
-         */
-
-        class PThreadCleanup {
-          /*
-           * PThreadCleanup
-           *
-           * Purpose
-           *      This class is a C++ helper class that is
-           *      used to implement pthread_cleanup_push/
-           *      pthread_cleanup_pop.
-           *      The destructor of this class automatically
-           *      pops the pushed cleanup routine regardless
-           *      of how the code exits the scope
-           *      (i.e. such as by an exception)
-           */
-      ptw32_cleanup_callback_t cleanUpRout;
-          void    *       obj;
-          int             executeIt;
-
-        public:
-          PThreadCleanup() :
-            cleanUpRout( 0 ),
-            obj( 0 ),
-            executeIt( 0 )
-            /*
-             * No cleanup performed
-             */
-            {
-            }
-
-          PThreadCleanup(
-             ptw32_cleanup_callback_t routine,
-                         void    *       arg ) :
-            cleanUpRout( routine ),
-            obj( arg ),
-            executeIt( 1 )
-            /*
-             * Registers a cleanup routine for 'arg'
-             */
-            {
-            }
-
-          ~PThreadCleanup()
-            {
-              if ( executeIt && ((void *) cleanUpRout != (void *) 0) )
-                {
-                  (void) (*cleanUpRout)( obj );
-                }
-            }
-
-          void execute( int exec )
-            {
-              executeIt = exec;
-            }
-        };
-
-        /*
-         * C++ implementation of PThreads cancel cleanup;
-         * This implementation takes advantage of a helper
-         * class who's destructor automatically calls the
-         * cleanup routine if we exit our scope weirdly
-         */
-#define pthread_cleanup_push( _rout, _arg ) \
-        { \
-            PThreadCleanup  cleanup((ptw32_cleanup_callback_t)(_rout), \
-                                    (void *) (_arg) );
-
-#define pthread_cleanup_pop( _execute ) \
-            cleanup.execute( _execute ); \
-        }
-
-#else
-
-#error ERROR [__FILE__, line __LINE__]: Cleanup type undefined.
-
-#endif /* __CLEANUP_CXX */
-
-#endif /* __CLEANUP_C */
-
-#endif /* __CLEANUP_SEH */
 
 /*
  * ===============
@@ -870,276 +553,220 @@ struct ptw32_cleanup_t
 /*
  * PThread Attribute Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_init (pthread_attr_t * attr);
+extern int __cdecl pthread_attr_init (pthread_attr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_destroy (pthread_attr_t * attr);
+extern int __cdecl pthread_attr_destroy (pthread_attr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getdetachstate (const pthread_attr_t * attr,
-                                         int *detachstate);
+extern int __cdecl pthread_attr_getdetachstate (const pthread_attr_t * attr, int * detachstate);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getstackaddr (const pthread_attr_t * attr,
-                                       void **stackaddr);
+extern int __cdecl pthread_attr_getstackaddr (const pthread_attr_t * attr, void ** stackaddr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getstacksize (const pthread_attr_t * attr,
-                                       size_t * stacksize);
+extern int __cdecl pthread_attr_getstacksize (const pthread_attr_t * attr, size_t * stacksize);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setdetachstate (pthread_attr_t * attr,
-                                         int detachstate);
+extern int __cdecl pthread_attr_setdetachstate (pthread_attr_t * attr, int detachstate);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setstackaddr (pthread_attr_t * attr,
-                                       void *stackaddr);
+extern int __cdecl pthread_attr_setstackaddr (pthread_attr_t * attr, void * stackaddr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setstacksize (pthread_attr_t * attr,
-                                       size_t stacksize);
+extern int __cdecl pthread_attr_setstacksize (pthread_attr_t * attr, size_t stacksize);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getschedparam (const pthread_attr_t *attr,
-                                        struct sched_param *param);
+extern int __cdecl pthread_attr_getschedparam (const pthread_attr_t * attr, struct sched_param * param);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setschedparam (pthread_attr_t *attr,
-                                        const struct sched_param *param);
+extern int __cdecl pthread_attr_setschedparam (pthread_attr_t * attr, const struct sched_param * param);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setschedpolicy (pthread_attr_t *,
-                                         int);
+extern int __cdecl pthread_attr_setschedpolicy (pthread_attr_t * , int);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getschedpolicy (const pthread_attr_t *,
-                                         int *);
+extern int __cdecl pthread_attr_getschedpolicy (const pthread_attr_t * , int * );
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setinheritsched(pthread_attr_t * attr,
-                                         int inheritsched);
+extern int __cdecl pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getinheritsched(const pthread_attr_t * attr,
-                                         int * inheritsched);
+extern int __cdecl pthread_attr_getinheritsched(const pthread_attr_t * attr, int * inheritsched);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_setscope (pthread_attr_t *,
-                                   int);
+extern int __cdecl pthread_attr_setscope (pthread_attr_t * , int );
 
-PTW32_DLLPORT int PTW32_CDECL pthread_attr_getscope (const pthread_attr_t *,
-                                   int *);
+extern int __cdecl pthread_attr_getscope (const pthread_attr_t * , int * );
 
 /*
  * PThread Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_create (pthread_t * tid,
+extern int __cdecl pthread_create (pthread_t * tid,
                             const pthread_attr_t * attr,
-                            void *(PTW32_CDECL *start) (void *),
-                            void *arg);
+                            void * (__cdecl * start) (void *),
+                            void * arg);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_detach (pthread_t tid);
+extern int __cdecl pthread_detach (pthread_t tid);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_equal (pthread_t t1,
-                           pthread_t t2);
+extern int __cdecl pthread_equal (pthread_t t1, pthread_t t2);
 
-PTW32_DLLPORT void PTW32_CDECL pthread_exit (void *value_ptr);
+extern void __cdecl pthread_exit (void * value_ptr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_join (pthread_t thread,
-                          void **value_ptr);
+extern int __cdecl pthread_join (pthread_t thread, void ** value_ptr);
 
-PTW32_DLLPORT pthread_t PTW32_CDECL pthread_self (void);
+extern pthread_t __cdecl pthread_self (void);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cancel (pthread_t thread);
+extern int __cdecl pthread_cancel (pthread_t thread);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_setcancelstate (int state,
-                                    int *oldstate);
+extern int __cdecl pthread_setcancelstate (int state, int * oldstate);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_setcanceltype (int type,
-                                   int *oldtype);
+extern int __cdecl pthread_setcanceltype (int type, int * oldtype);
 
-PTW32_DLLPORT void PTW32_CDECL pthread_testcancel (void);
+extern void __cdecl pthread_testcancel (void);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_once (pthread_once_t * once_control,
-                          void (PTW32_CDECL *init_routine) (void));
+extern int __cdecl pthread_once (pthread_once_t * once_control, void (__cdecl * init_routine) (void));
 
-#if PTW32_LEVEL >= PTW32_LEVEL_MAX
-PTW32_DLLPORT ptw32_cleanup_t * PTW32_CDECL ptw32_pop_cleanup (int execute);
+extern ptw32_cleanup_t * __cdecl ptw32_pop_cleanup (int execute);
 
-PTW32_DLLPORT void PTW32_CDECL ptw32_push_cleanup (ptw32_cleanup_t * cleanup,
-                                 ptw32_cleanup_callback_t routine,
-                                 void *arg);
-#endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
+extern void __cdecl ptw32_push_cleanup (ptw32_cleanup_t * cleanup, ptw32_cleanup_callback_t routine, void * arg);
 
 /*
  * Thread Specific Data Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_key_create (pthread_key_t * key,
-                                void (PTW32_CDECL *destructor) (void *));
+extern int __cdecl pthread_key_create (pthread_key_t * key, void (__cdecl * destructor) (void *));
 
-PTW32_DLLPORT int PTW32_CDECL pthread_key_delete (pthread_key_t key);
+extern int __cdecl pthread_key_delete (pthread_key_t key);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_setspecific (pthread_key_t key,
-                                 const void *value);
+extern int __cdecl pthread_setspecific (pthread_key_t key, const void * value);
 
-PTW32_DLLPORT void * PTW32_CDECL pthread_getspecific (pthread_key_t key);
+extern void * __cdecl pthread_getspecific (pthread_key_t key);
 
 
 /*
  * Mutex Attribute Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_init (pthread_mutexattr_t * attr);
+extern int __cdecl pthread_mutexattr_init (pthread_mutexattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_destroy (pthread_mutexattr_t * attr);
+extern int __cdecl pthread_mutexattr_destroy (pthread_mutexattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_getpshared (const pthread_mutexattr_t
-                                          * attr,
-                                          int *pshared);
+extern int __cdecl pthread_mutexattr_getpshared (const pthread_mutexattr_t * attr, int * pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_setpshared (pthread_mutexattr_t * attr,
-                                          int pshared);
+extern int __cdecl pthread_mutexattr_setpshared (pthread_mutexattr_t * attr, int pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_settype (pthread_mutexattr_t * attr, int kind);
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_gettype (const pthread_mutexattr_t * attr, int *kind);
+extern int __cdecl pthread_mutexattr_settype (pthread_mutexattr_t * attr, int kind);
+extern int __cdecl pthread_mutexattr_gettype (const pthread_mutexattr_t * attr, int *kind);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_setrobust(
-                                           pthread_mutexattr_t *attr,
-                                           int robust);
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_getrobust(
-                                           const pthread_mutexattr_t * attr,
-                                           int * robust);
+extern int __cdecl pthread_mutexattr_setrobust(pthread_mutexattr_t * attr, int robust);
+extern int __cdecl pthread_mutexattr_getrobust(const pthread_mutexattr_t * attr, int * robust);
 
 /*
  * Barrier Attribute Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_barrierattr_init (pthread_barrierattr_t * attr);
+extern int __cdecl pthread_barrierattr_init (pthread_barrierattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_barrierattr_destroy (pthread_barrierattr_t * attr);
+extern int __cdecl pthread_barrierattr_destroy (pthread_barrierattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_barrierattr_getpshared (const pthread_barrierattr_t
-                                            * attr,
-                                            int *pshared);
+extern int __cdecl pthread_barrierattr_getpshared (const pthread_barrierattr_t * attr, int * pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_barrierattr_setpshared (pthread_barrierattr_t * attr,
-                                            int pshared);
+extern int __cdecl pthread_barrierattr_setpshared (pthread_barrierattr_t * attr, int pshared);
 
 /*
  * Mutex Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_init (pthread_mutex_t * mutex,
-                                const pthread_mutexattr_t * attr);
+extern int __cdecl pthread_mutex_init (pthread_mutex_t * mutex, const pthread_mutexattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_destroy (pthread_mutex_t * mutex);
+extern int __cdecl pthread_mutex_destroy (pthread_mutex_t * mutex);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_lock (pthread_mutex_t * mutex);
+extern int __cdecl pthread_mutex_lock (pthread_mutex_t * mutex);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_timedlock(pthread_mutex_t * mutex,
-                                    const struct timespec *abstime);
+extern int __cdecl pthread_mutex_timedlock(pthread_mutex_t * mutex, const struct timespec * abstime);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_trylock (pthread_mutex_t * mutex);
+extern int __cdecl pthread_mutex_trylock (pthread_mutex_t * mutex);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_unlock (pthread_mutex_t * mutex);
+extern int __cdecl pthread_mutex_unlock (pthread_mutex_t * mutex);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_mutex_consistent (pthread_mutex_t * mutex);
+extern int __cdecl pthread_mutex_consistent (pthread_mutex_t * mutex);
 
 /*
  * Spinlock Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_spin_init (pthread_spinlock_t * lock, int pshared);
+extern int __cdecl pthread_spin_init (pthread_spinlock_t * lock, int pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_spin_destroy (pthread_spinlock_t * lock);
+extern int __cdecl pthread_spin_destroy (pthread_spinlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_spin_lock (pthread_spinlock_t * lock);
+extern int __cdecl pthread_spin_lock (pthread_spinlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_spin_trylock (pthread_spinlock_t * lock);
+extern int __cdecl pthread_spin_trylock (pthread_spinlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_spin_unlock (pthread_spinlock_t * lock);
+extern int __cdecl pthread_spin_unlock (pthread_spinlock_t * lock);
 
 /*
  * Barrier Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_barrier_init (pthread_barrier_t * barrier,
-                                  const pthread_barrierattr_t * attr,
-                                  unsigned int count);
+extern int __cdecl pthread_barrier_init (pthread_barrier_t * barrier, const pthread_barrierattr_t * attr, unsigned int count);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_barrier_destroy (pthread_barrier_t * barrier);
+extern int __cdecl pthread_barrier_destroy (pthread_barrier_t * barrier);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_barrier_wait (pthread_barrier_t * barrier);
+extern int __cdecl pthread_barrier_wait (pthread_barrier_t * barrier);
 
 /*
  * Condition Variable Attribute Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_condattr_init (pthread_condattr_t * attr);
+extern int __cdecl pthread_condattr_init (pthread_condattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_condattr_destroy (pthread_condattr_t * attr);
+extern int __cdecl pthread_condattr_destroy (pthread_condattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_condattr_getpshared (const pthread_condattr_t * attr,
-                                         int *pshared);
+extern int __cdecl pthread_condattr_getpshared (const pthread_condattr_t * attr, int * pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_condattr_setpshared (pthread_condattr_t * attr,
-                                         int pshared);
+extern int __cdecl pthread_condattr_setpshared (pthread_condattr_t * attr, int pshared);
 
 /*
  * Condition Variable Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_init (pthread_cond_t * cond,
-                               const pthread_condattr_t * attr);
+extern int __cdecl pthread_cond_init (pthread_cond_t * cond, const pthread_condattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_destroy (pthread_cond_t * cond);
+extern int __cdecl pthread_cond_destroy (pthread_cond_t * cond);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_wait (pthread_cond_t * cond,
-                               pthread_mutex_t * mutex);
+extern int __cdecl pthread_cond_wait (pthread_cond_t * cond, pthread_mutex_t * mutex);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_timedwait (pthread_cond_t * cond,
-                                    pthread_mutex_t * mutex,
-                                    const struct timespec *abstime);
+extern int __cdecl pthread_cond_timedwait (pthread_cond_t * cond, pthread_mutex_t * mutex, const struct timespec * abstime);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_signal (pthread_cond_t * cond);
+extern int __cdecl pthread_cond_signal (pthread_cond_t * cond);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_cond_broadcast (pthread_cond_t * cond);
+extern int __cdecl pthread_cond_broadcast (pthread_cond_t * cond);
 
 /*
  * Scheduling
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_setschedparam (pthread_t thread,
-                                   int policy,
-                                   const struct sched_param *param);
+extern int __cdecl pthread_setschedparam (pthread_t thread, int policy, const struct sched_param * param);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_getschedparam (pthread_t thread,
-                                   int *policy,
-                                   struct sched_param *param);
+extern int __cdecl pthread_getschedparam (pthread_t thread, int * policy, struct sched_param * param);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_setconcurrency (int);
- 
-PTW32_DLLPORT int PTW32_CDECL pthread_getconcurrency (void);
+extern int __cdecl pthread_setconcurrency (int);
+
+extern int __cdecl pthread_getconcurrency (void);
 
 /*
  * Read-Write Lock Functions
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_init(pthread_rwlock_t *lock,
-                                const pthread_rwlockattr_t *attr);
+extern int __cdecl pthread_rwlock_init(pthread_rwlock_t * lock, const pthread_rwlockattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_destroy(pthread_rwlock_t *lock);
+extern int __cdecl pthread_rwlock_destroy(pthread_rwlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_tryrdlock(pthread_rwlock_t *);
+extern int __cdecl pthread_rwlock_tryrdlock(pthread_rwlock_t *);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_trywrlock(pthread_rwlock_t *);
+extern int __cdecl pthread_rwlock_trywrlock(pthread_rwlock_t *);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_rdlock(pthread_rwlock_t *lock);
+extern int __cdecl pthread_rwlock_rdlock(pthread_rwlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_timedrdlock(pthread_rwlock_t *lock,
-                                       const struct timespec *abstime);
+extern int __cdecl pthread_rwlock_timedrdlock(pthread_rwlock_t * lock, const struct timespec * abstime);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_wrlock(pthread_rwlock_t *lock);
+extern int __cdecl pthread_rwlock_wrlock(pthread_rwlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_timedwrlock(pthread_rwlock_t *lock,
-                                       const struct timespec *abstime);
+extern int __cdecl pthread_rwlock_timedwrlock(pthread_rwlock_t * lock, const struct timespec * abstime);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlock_unlock(pthread_rwlock_t *lock);
+extern int __cdecl pthread_rwlock_unlock(pthread_rwlock_t * lock);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlockattr_init (pthread_rwlockattr_t * attr);
+extern int __cdecl pthread_rwlockattr_init (pthread_rwlockattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlockattr_destroy (pthread_rwlockattr_t * attr);
+extern int __cdecl pthread_rwlockattr_destroy (pthread_rwlockattr_t * attr);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlockattr_getpshared (const pthread_rwlockattr_t * attr,
-                                           int *pshared);
+extern int __cdecl pthread_rwlockattr_getpshared (const pthread_rwlockattr_t * attr, int * pshared);
 
-PTW32_DLLPORT int PTW32_CDECL pthread_rwlockattr_setpshared (pthread_rwlockattr_t * attr,
-                                           int pshared);
-
-#if PTW32_LEVEL >= PTW32_LEVEL_MAX - 1
+extern int __cdecl pthread_rwlockattr_setpshared (pthread_rwlockattr_t * attr, int pshared);
 
 /*
  * Signal Functions. Should be defined in <signal.h> but MSVC and MinGW32
  * already have signal.h that don't define these.
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_kill(pthread_t thread, int sig);
+extern int __cdecl pthread_kill(pthread_t thread, int sig);
 
 /*
  * Non-portable functions
@@ -1148,34 +775,36 @@ PTW32_DLLPORT int PTW32_CDECL pthread_kill(pthread_t thread, int sig);
 /*
  * Compatibility with Linux.
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_setkind_np(pthread_mutexattr_t * attr,
-                                         int kind);
-PTW32_DLLPORT int PTW32_CDECL pthread_mutexattr_getkind_np(pthread_mutexattr_t * attr,
-                                         int *kind);
+extern int __cdecl pthread_mutexattr_setkind_np(pthread_mutexattr_t * attr, int kind);
+extern int __cdecl pthread_mutexattr_getkind_np(pthread_mutexattr_t * attr, int * kind);
+extern int __cdecl pthread_timedjoin_np(pthread_t thread, void ** value_ptr, const struct timespec * abstime);
+extern int __cdecl pthread_tryjoin_np(pthread_t thread, void ** value_ptr);
+extern int __cdecl pthread_setaffinity_np(pthread_t thread, size_t cpusetsize, const cpu_set_t * cpuset);
+extern int __cdecl pthread_getaffinity_np(pthread_t thread, size_t cpusetsize, cpu_set_t * cpuset);
 
 /*
  * Possibly supported by other POSIX threads implementations
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_delay_np (struct timespec * interval);
-PTW32_DLLPORT int PTW32_CDECL pthread_num_processors_np(void);
-PTW32_DLLPORT unsigned __int64 PTW32_CDECL pthread_getunique_np(pthread_t thread);
+extern int __cdecl pthread_delay_np (struct timespec * interval);
+extern int __cdecl pthread_num_processors_np(void);
+extern unsigned __int64 __cdecl pthread_getunique_np(pthread_t thread);
 
 /*
  * Useful if an application wants to statically link
  * the lib rather than load the DLL at run-time.
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_win32_process_attach_np(void);
-PTW32_DLLPORT int PTW32_CDECL pthread_win32_process_detach_np(void);
-PTW32_DLLPORT int PTW32_CDECL pthread_win32_thread_attach_np(void);
-PTW32_DLLPORT int PTW32_CDECL pthread_win32_thread_detach_np(void);
+extern int __cdecl pthread_win32_process_attach_np(void);
+extern int __cdecl pthread_win32_process_detach_np(void);
+extern int __cdecl pthread_win32_thread_attach_np(void);
+extern int __cdecl pthread_win32_thread_detach_np(void);
 
 /*
  * Features that are auto-detected at load/run time.
  */
-PTW32_DLLPORT int PTW32_CDECL pthread_win32_test_features_np(int);
+extern int __cdecl pthread_win32_test_features_np(int);
 enum ptw32_features {
-  PTW32_SYSTEM_INTERLOCKED_COMPARE_EXCHANGE = 0x0001, /* System provides it. */
-  PTW32_ALERTABLE_ASYNC_CANCEL              = 0x0002  /* Can cancel blocked threads. */
+  PTW32_SYSTEM_INTERLOCKED_COMPARE_EXCHANGE = 0x0001,	/* System provides it. */
+  PTW32_ALERTABLE_ASYNC_CANCEL              = 0x0002	/* Can cancel blocked threads. */
 };
 
 /*
@@ -1186,20 +815,16 @@ enum ptw32_features {
  * WM_TIMECHANGE message. It can be passed directly to
  * pthread_create() as a new thread if desired.
  */
-PTW32_DLLPORT void * PTW32_CDECL pthread_timechange_handler_np(void *);
-
-#endif /*PTW32_LEVEL >= PTW32_LEVEL_MAX - 1 */
-
-#if PTW32_LEVEL >= PTW32_LEVEL_MAX
+extern void * __cdecl pthread_timechange_handler_np(void *);
 
 /*
  * Returns the Win32 HANDLE for the POSIX thread.
  */
-PTW32_DLLPORT HANDLE PTW32_CDECL pthread_getw32threadhandle_np(pthread_t thread);
+extern HANDLE __cdecl pthread_getw32threadhandle_np(pthread_t thread);
 /*
  * Returns the win32 thread ID for POSIX thread.
  */
-PTW32_DLLPORT DWORD PTW32_CDECL pthread_getw32threadid_np (pthread_t thread);
+extern DWORD __cdecl pthread_getw32threadid_np (pthread_t thread);
 
 
 /*
@@ -1217,60 +842,49 @@ PTW32_DLLPORT DWORD PTW32_CDECL pthread_getw32threadid_np (pthread_t thread);
  * argument to TimedWait is simply passed to
  * WaitForMultipleObjects.
  */
-PTW32_DLLPORT int PTW32_CDECL pthreadCancelableWait (HANDLE waitHandle);
-PTW32_DLLPORT int PTW32_CDECL pthreadCancelableTimedWait (HANDLE waitHandle,
-                                        DWORD timeout);
-
-#endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
+extern int __cdecl pthreadCancelableWait (HANDLE waitHandle);
+extern int __cdecl pthreadCancelableTimedWait (HANDLE waitHandle, DWORD timeout);
 
 /*
- * Thread-Safe C Runtime Library Mappings.
+ * If pthreads-win32 is compiled as a DLL with MSVC, and
+ * both it and the application are linked against the static
+ * C runtime (i.e. with the /MT compiler flag), then the
+ * application will not see the same C runtime globals as
+ * the library. These include the errno variable, and the
+ * termination routine called by terminate(). For details,
+ * refer to the following links:
+ *
+ * http://support.microsoft.com/kb/94248
+ * (Section 4: Problems Encountered When Using Multiple CRT Libraries)
+ *
+ * http://social.msdn.microsoft.com/forums/en-US/vclanguage/thread/b4500c0d-1b69-40c7-9ef5-08da1025b5bf
+ *
+ * When pthreads-win32 is built with PTW32_USES_SEPARATE_CRT
+ * defined, the following features are enabled:
+ *
+ * (1) In addition to setting the errno variable when errors
+ * occur, the library will also call SetLastError() with the
+ * same value. The application can then use GetLastError()
+ * to obtain the value of errno. (This pair of routines are
+ * in kernel32.dll, and so are not affected by the use of
+ * multiple CRT libraries.)
+ *
+ * (2) When C++ or SEH cleanup is used, the library defines
+ * a function pthread_win32_set_terminate_np(), which can be
+ * used to set the termination routine that should be called
+ * when an unhandled exception occurs in a thread function
+ * (or otherwise inside the library).
+ *
+ * Note: "_DLL" implies the /MD compiler flag.
  */
-#if !defined(_UWIN)
-#  if defined(NEED_ERRNO)
-     PTW32_DLLPORT int * PTW32_CDECL _errno( void );
-#  else
-#    if !defined(errno)
-#      if (defined(_MT) || defined(_DLL))
-         __declspec(dllimport) extern int * __cdecl _errno(void);
-#        define errno   (*_errno())
-#      endif
-#    endif
-#  endif
-#endif
-
-/*
- * Some compiler environments don't define some things.
- */
-#if defined(__BORLANDC__)
-#  define _ftime ftime
-#  define _timeb timeb
-#endif
-
-#if defined(__cplusplus)
-
-/*
- * Internal exceptions
- */
-class ptw32_exception {};
-class ptw32_exception_cancel : public ptw32_exception {};
-class ptw32_exception_exit   : public ptw32_exception {};
-
-#endif
-
-#if PTW32_LEVEL >= PTW32_LEVEL_MAX
+typedef void (* ptw32_terminate_handler)();
+extern ptw32_terminate_handler __cdecl pthread_win32_set_terminate_np(ptw32_terminate_handler termFunction);
 
 /* FIXME: This is only required if the library was built using SEH */
 /*
  * Get internal SEH tag
  */
-PTW32_DLLPORT DWORD PTW32_CDECL ptw32_get_exception_services_code(void);
-
-#endif /* PTW32_LEVEL >= PTW32_LEVEL_MAX */
-
-#if !defined(PTW32_BUILD)
-
-#if defined(__CLEANUP_SEH)
+extern DWORD __cdecl ptw32_get_exception_services_code(void);
 
 /*
  * Redefine the SEH __except keyword to ensure that applications
@@ -1280,61 +894,6 @@ PTW32_DLLPORT DWORD PTW32_CDECL ptw32_get_exception_services_code(void);
         __except( ( GetExceptionCode() == ptw32_get_exception_services_code() ) \
                  ? EXCEPTION_CONTINUE_SEARCH : ( E ) )
 
-#endif /* __CLEANUP_SEH */
-
-#if defined(__CLEANUP_CXX)
-
-/*
- * Redefine the C++ catch keyword to ensure that applications
- * propagate our internal exceptions up to the library's internal handlers.
- */
-#if defined(_MSC_VER)
-        /*
-         * WARNING: Replace any 'catch( ... )' with 'PtW32CatchAll'
-         * if you want Pthread-Win32 cancelation and pthread_exit to work.
-         */
-
-#if !defined(PtW32NoCatchWarn)
-
-#pragma message("Specify \"/DPtW32NoCatchWarn\" compiler flag to skip this message.")
-#pragma message("------------------------------------------------------------------")
-#pragma message("When compiling applications with MSVC++ and C++ exception handling:")
-#pragma message("  Replace any 'catch( ... )' in routines called from POSIX threads")
-#pragma message("  with 'PtW32CatchAll' or 'CATCHALL' if you want POSIX thread")
-#pragma message("  cancelation and pthread_exit to work. For example:")
-#pragma message("")
-#pragma message("    #if defined(PtW32CatchAll)")
-#pragma message("      PtW32CatchAll")
-#pragma message("    #else")
-#pragma message("      catch(...)")
-#pragma message("    #endif")
-#pragma message("        {")
-#pragma message("          /* Catchall block processing */")
-#pragma message("        }")
-#pragma message("------------------------------------------------------------------")
-
-#endif
-
-#define PtW32CatchAll \
-        catch( ptw32_exception & ) { throw; } \
-        catch( ... )
-
-#else /* _MSC_VER */
-
-#define catch( E ) \
-        catch( ptw32_exception & ) { throw; } \
-        catch( E )
-
-#endif /* _MSC_VER */
-
-#endif /* __CLEANUP_CXX */
-
-#endif /* ! PTW32_BUILD */
-
-#if defined(__cplusplus)
-}                               /* End of extern "C" */
-#endif                          /* __cplusplus */
-
 #if defined(PTW32__HANDLE_DEF)
 # undef HANDLE
 #endif
@@ -1342,9 +901,4 @@ PTW32_DLLPORT DWORD PTW32_CDECL ptw32_get_exception_services_code(void);
 # undef DWORD
 #endif
 
-#undef PTW32_LEVEL
-#undef PTW32_LEVEL_MAX
-
-#endif /* ! RC_INVOKED */
-
-#endif /* PTHREAD_H */
+#endif /* _H_PTHREAD */

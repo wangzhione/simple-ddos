@@ -30,14 +30,14 @@ endef
 #
 # 具体产生具体东西了
 #
-.PHONY:all clean cleanall
+.PHONY : all clean
 
-all:ddos.exe
+all : ddos.exe
 
 #
 # *.o 映射到 $(TAR_PATH)/$(BUILD_DIR)/*.o
 #
-ddos.exe:main.o iop_util.o
+ddos.exe : main.o schead.o strerr.o sctime.o scsocket.o
 	$(RUN)
 
 #
@@ -59,7 +59,4 @@ $(TAR_PATH):
 	-mkdir -p $@/$(OBJ_DIR)
 
 clean:
-	-rm -rf $(TAR_PATH)/$(OBJ_DIR)/*
-
-cleanall:
 	-rm -rf $(TAR_PATH)

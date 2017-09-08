@@ -1,11 +1,13 @@
-﻿# Ignore the uploaded folders
-/.vs
-/Debug
-/Output
-/Release
-/libiop/Debug
-/libiop/x64
-/libiop/logs
+# Ignore the uploaded folders
+logs/
+Output/
+
+# Ignore the project uploaded folders
+.vs/
+x64/
+Debug/
+.vscode/
+Release/
 
 # Ignore the uploaded files
 -p
@@ -14,6 +16,7 @@
 *.db
 *.suo
 *.swp
+*.swo
 *.exe
 *.out
 *.pdb
@@ -24,6 +27,8 @@
 *.out
 *.obj
 *.idb
+*.TMP
+.*.swo
 *.iobj
 *.ipdb
 *.tlog
